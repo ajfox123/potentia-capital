@@ -162,7 +162,7 @@ def yahoo_data(name, driver):
             execs = pd.DataFrame(d)
             execs['title'] = execs['title'].str.upper().str.replace(',', ' ')
             try:
-                ceo = execs[execs.title.apply(lambda x: any(identifier in x for identifier in ['CEO', 'CHIEF EXECUTIVE OFFICER']))].name.values[0]
+                ceo = execs[execs.title.apply(lambda x: any(identifier in x for identifier in ['CEO', 'CHIEF EXECUTIVE OFFICER', "CHIEF EXEC. OFFICER"]))].name.values[0]
                 data['CEO'] = ceo
                 print(ceo)
             except:
