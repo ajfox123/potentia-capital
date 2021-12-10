@@ -1,37 +1,54 @@
-import yfinance as yf
 import pandas as pd
-import lxml
 from lxml import html
+from lxml import etree
 import requests
 import json
 from bs4 import BeautifulSoup as bs
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 import chromedriver_binary
 import time
-from selenium.webdriver.common.keys import Keys
-import pandas as pd
-from IPython.display import display
 import re
+import numpy as np
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from pprint import pprint
+import pickle
 
 
-headers = {
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Cache-Control': 'max-age=0',
-    'Connection': 'close',
-    'DNT': '1', # Do Not Track Request Header 
-    'Pragma': 'no-cache',
-    'Referrer': 'https://google.com',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36'
-}
+def main():
+    url = 'https://www.capitaliq.com/ciqdotnet/login-sso.aspx'
+    driver = webdriver.Chrome()
+    driver.get(url)
 
-fin_url = 'https://finance.yahoo.com/quote/LLC.AX/financials?p=LLC.AX'
-profile_url = 'https://finance.yahoo.com/quote/LLC.AX/profile?p=LLC.AX'
+    # login
+    # pickle.dump(driver.get_cookies(), open('cookies.pkl', 'wb'))
 
-response = requests.get(profile_url, headers=headers)
-soup = bs(response.text, 'html.parser')
-pattern = re.compile(r'\s--\sData\s--\s')
-script_data = soup.find('script', text=pattern).contents[0]
-start = script_data.find("context")-2
-json_data = json.loads(script_data[start:-12])
+    cookies = pickle.load(open('cookies.pkl', 'rb'))
+    for cookie in cookies:
+        driver.add_cookie(cookie)
+        
+    driver.get('https://www.capitaliq.com/CIQDotNet/my/dashboard.aspx')
+
+    search_bar = driver.find_element_by_name("SearchText")
+    
+    url = 'https://estateinnovation.com/101-top-australia-construction-companies-and-startups-innovating-the-industry/'
+    response = requests.get(url)
+    soup = bs(response.content, 'html.parser')
+    dom = etree.HTML(str(soup))
+    companies = dom.xpath('//div[@class="wp-block-cover alignwide has-black-background-color has-background-dim is-position-center-center"]')
+
+    company_data = []
+
+    for company in companies:
+        data = {}
+        name = company.xpath('.//h3[@class="has-huge-font-size"]//descendant::span//text()')[0]
+        links = dict(zip(company.xpath('.//a/text()'), company.xpath('.//a/@href')))
+        data["Name"] = name 
+        for link in links:
+            data[link] = links[link]
+            
+        try:
+            search_bar.send_keys(name)
+            search_bar.send_keys(Keys.ENTER)
