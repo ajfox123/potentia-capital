@@ -48,7 +48,8 @@ def main():
         print(name)
         for link in links:
             data[link] = links[link]
-            
+        
+        driver.get('https://www.capitaliq.com/CIQDotNet/my/dashboard.aspx')
         found = find_company_page(name, driver)
         if found:
             print('found company')
@@ -120,12 +121,18 @@ def find_company_page(name, driver):
 
 def scrape_iq_data(driver):
     data = {}
-    revenue = driver.find_element_by_xpath('//td//*[contains(text(), "Total Revenue")]').find_element_by_xpath('..//..//a').text
-    revenue = float(revenue.replace(",", ""))*(10**6)
+    revenue = driver.find_element_by_xpath('//td//*[contains(text(), "Total Revenue")]').find_element_by_xpath('..//following-sibling::td').text
+    try:
+        revenue = float(revenue.replace(",", ""))*(10**6)
+    except:
+        revenue = None
     data['Revenue'] = revenue
     
-    ebitda = driver.find_element_by_xpath('//td//*[contains(text(), "EBITDA")]').find_element_by_xpath('..//..//a').text
-    ebitda = float(ebitda.replace(",", ""))*(10**6)
+    ebitda = driver.find_element_by_xpath('//td//*[contains(text(), "EBITDA")]').find_element_by_xpath('..//following-sibling::td').text
+    try:
+        ebitda = float(ebitda.replace(",", ""))*(10**6)
+    except:
+        ebitda = None
     data['EBITDA'] = ebitda
     
     d = pd.read_html(driver.page_source)
