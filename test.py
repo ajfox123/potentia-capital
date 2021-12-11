@@ -151,5 +151,6 @@ def scrape_iq_data(driver):
                 print(cto)
             except:
                 print('cto not found')
-            return data
+            break
+    return data
 main()
